@@ -1,7 +1,11 @@
 package main
 
-import "fmt"
+import (
+	"net/http"
+)
 
 func main() {
-	fmt.Println("Hello World")
+	http.HandleFunc("/products", func(w http.ResponseWriter, r *http.Request) {})
+	http.HandleFunc("/products", func(w http.ResponseWriter, r *http.Request) {})
+	http.HandleFunc("/products/stock", func(w http.ResponseWriter, r *http.Request) {})
 }
