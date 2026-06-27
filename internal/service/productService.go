@@ -1,30 +1,56 @@
 package service
 
 import (
-	"inventoiry-service/internal/service/model"
+	"inventoiry-service/internal/service/dto"
+	"math/big"
+	"time"
 )
 
 func NewProductService() ProductService {
-	return &ProductCrudService{}
+	return &productCrudService{}
 }
 
 type ProductService interface {
-	CreateProduct(product *model.Product) *model.Product
-	FindProductBySku(sku string) *model.Product
-	AdjustStock(sku string, stock *model.Stock) *model.Product
+	CreateProduct(product *dto.Product) *dto.Product
+	FindProductBySku(sku string) *dto.Product
+	AdjustStock(sku string, stock *dto.Stock) *dto.Product
 }
 
-type ProductCrudService struct {
+type productCrudService struct {
 }
 
-func (service *ProductCrudService) CreateProduct(product *model.Product) *model.Product {
-	return &model.Product{}
+func (service *productCrudService) CreateProduct(product *dto.Product) *dto.Product {
+	return &dto.Product{
+		Sku:       product.Sku,
+		Name:      product.Name,
+		Quantity:  product.Quantity,
+		Reserved:  product.Reserved,
+		Price:     product.Price,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
 }
 
-func (service *ProductCrudService) FindProductBySku(sku string) *model.Product {
-	return &model.Product{}
+func (service *productCrudService) FindProductBySku(sku string) *dto.Product {
+	return &dto.Product{
+		Sku:       sku,
+		Name:      "Sku name",
+		Quantity:  0,
+		Reserved:  0,
+		Price:     *big.NewRat(9, 99),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
 }
 
-func (service *ProductCrudService) AdjustStock(sku string, stock *model.Stock) *model.Product {
-	return &model.Product{}
+func (service *productCrudService) AdjustStock(sku string, stock *dto.Stock) *dto.Product {
+	return &dto.Product{
+		Sku:       sku,
+		Name:      "Sku name",
+		Quantity:  stock.Quantity,
+		Reserved:  0,
+		Price:     *big.NewRat(9, 99),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
 }

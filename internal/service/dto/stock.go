@@ -1,4 +1,4 @@
-package model
+package dto
 
 type Stock struct {
 	Action   string

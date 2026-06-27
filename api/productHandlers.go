@@ -8,21 +8,21 @@ import (
 	"time"
 )
 
-func NewProductHttpHandler(service service.ProductService) ProductHandler {
-	return &ProductHttpHandler{service: service}
-}
-
 type ProductHandler interface {
 	CreateProduct(request *dto.ProductRequest) *dto.ProductResponse
 	FindProductBySku(sku string) *dto.ProductResponse
 	AdjustStock(sku string, request *dto.StockRequest) *dto.ProductResponse
 }
 
-type ProductHttpHandler struct {
+func NewProductHttpHandler(service service.ProductService) ProductHandler {
+	return &productHttpHandler{service: service}
+}
+
+type productHttpHandler struct {
 	service service.ProductService
 }
 
-func (handler *ProductHttpHandler) CreateProduct(request *dto.ProductRequest) *dto.ProductResponse {
+func (handler *productHttpHandler) CreateProduct(request *dto.ProductRequest) *dto.ProductResponse {
 	fmt.Printf("Body: %v\n", request)
 	return &dto.ProductResponse{
 		Sku:       request.Sku,
@@ -35,7 +35,7 @@ func (handler *ProductHttpHandler) CreateProduct(request *dto.ProductRequest) *d
 	}
 }
 
-func (handler *ProductHttpHandler) FindProductBySku(sku string) *dto.ProductResponse {
+func (handler *productHttpHandler) FindProductBySku(sku string) *dto.ProductResponse {
 	fmt.Printf("Sku: %v\n", sku)
 	return &dto.ProductResponse{
 		Sku:       sku,
@@ -48,7 +48,7 @@ func (handler *ProductHttpHandler) FindProductBySku(sku string) *dto.ProductResp
 	}
 }
 
-func (handler *ProductHttpHandler) AdjustStock(sku string, request *dto.StockRequest) *dto.ProductResponse {
+func (handler *productHttpHandler) AdjustStock(sku string, request *dto.StockRequest) *dto.ProductResponse {
 	fmt.Printf("Sku: %v\n", sku)
 	fmt.Printf("Body: %v\n", request)
 	return &dto.ProductResponse{
