@@ -3,12 +3,13 @@ package api
 import (
 	"fmt"
 	"inventoiry-service/api/dto"
+	"inventoiry-service/internal/service"
 	"math/big"
 	"time"
 )
 
-func NewProductHttpHandler() ProductHandler {
-	return &ProductHttpHandler{}
+func NewProductHttpHandler(service service.ProductService) ProductHandler {
+	return &ProductHttpHandler{service: service}
 }
 
 type ProductHandler interface {
@@ -18,6 +19,7 @@ type ProductHandler interface {
 }
 
 type ProductHttpHandler struct {
+	service service.ProductService
 }
 
 func (handler *ProductHttpHandler) CreateProduct(request *dto.ProductRequest) *dto.ProductResponse {

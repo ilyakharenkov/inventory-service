@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"inventoiry-service/api"
 	"inventoiry-service/api/dto"
+	"inventoiry-service/internal/service"
 	"net/http"
 )
 
 func main() {
-	productHandler := api.NewProductHttpHandler()
+	productService := service.NewProductService()
+	productHandler := api.NewProductHttpHandler(productService)
 
 	http.HandleFunc("/products", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
