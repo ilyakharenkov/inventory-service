@@ -1,6 +1,7 @@
 package service
 
 import (
+	"inventoiry-service/internal/repository"
 	"inventoiry-service/internal/service/dto"
 	"math/big"
 	"time"
@@ -17,6 +18,7 @@ type ProductService interface {
 }
 
 type productCrudService struct {
+	repository repository.ProductRepository
 }
 
 func (service *productCrudService) CreateProduct(product *dto.Product) *dto.Product {

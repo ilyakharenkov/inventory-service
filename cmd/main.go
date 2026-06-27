@@ -50,6 +50,8 @@ func main() {
 		sku := r.URL.Query().Get("sku")
 		response := productHandler.AdjustStock(sku, &requestBody)
 
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
 		if err := json.NewEncoder(w).Encode(response); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
