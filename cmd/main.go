@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"inventoiry-service/api"
+	"inventoiry-service/internal/handlers"
 	"inventoiry-service/internal/repository"
 	"inventoiry-service/internal/service"
 	"net/http"
@@ -11,7 +11,7 @@ import (
 func main() {
 	productRepository := repository.NewProductRepository()
 	productService := service.NewProductService(productRepository)
-	productHandler := api.NewProductHttpHandler(productService)
+	productHandler := handlers.NewProductHttpHandler(productService)
 
 	mux := http.NewServeMux()
 	productHandler.RegisterRoutes(mux)
