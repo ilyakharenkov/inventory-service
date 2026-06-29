@@ -1,1 +1,1 @@
-module inventoiry-service
+module inventory-service

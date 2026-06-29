@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"inventoiry-service/internal/handlers"
-	"inventoiry-service/internal/repository"
-	"inventoiry-service/internal/service"
+	"inventory-service/internal/handlers"
+	"inventory-service/internal/repository"
+	"inventory-service/internal/service"
 	"net/http"
 )
 

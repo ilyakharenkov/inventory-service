@@ -1,9 +1,9 @@
 package service
 
 import (
-	"inventoiry-service/internal/repository"
-	"inventoiry-service/internal/repository/model"
-	"inventoiry-service/internal/service/dto"
+	"inventory-service/internal/repository"
+	"inventory-service/internal/repository/model"
+	"inventory-service/internal/service/dto"
 	"time"
 )
 

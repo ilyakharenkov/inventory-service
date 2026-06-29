@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"inventoiry-service/internal/repository/model"
+	"inventory-service/internal/repository/model"
 	"sync"
 )
 
