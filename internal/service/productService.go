@@ -2,13 +2,13 @@ package service
 
 import (
 	"inventoiry-service/internal/repository"
+	"inventoiry-service/internal/repository/model"
 	"inventoiry-service/internal/service/dto"
-	"math/big"
 	"time"
 )
 
-func NewProductService() ProductService {
-	return &productCrudService{}
+func NewProductService(repository repository.ProductRepository) ProductService {
+	return &productCrudService{repository: repository}
 }
 
 type ProductService interface {
@@ -22,37 +22,67 @@ type productCrudService struct {
 }
 
 func (service *productCrudService) CreateProduct(product *dto.Product) *dto.Product {
-	return &dto.Product{
+	productEntity := model.Product{
 		Sku:       product.Sku,
 		Name:      product.Name,
 		Quantity:  product.Quantity,
 		Reserved:  product.Reserved,
 		Price:     product.Price,
 		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		UpdatedAt: time.Time{},
+	}
+
+	p := service.repository.CreateProduct(&productEntity)
+
+	return &dto.Product{
+		Sku:       p.Sku,
+		Name:      p.Name,
+		Quantity:  p.Quantity,
+		Reserved:  p.Reserved,
+		Price:     p.Price,
+		CreatedAt: p.CreatedAt,
+		UpdatedAt: p.UpdatedAt,
 	}
 }
 
 func (service *productCrudService) FindProductBySku(sku string) *dto.Product {
+	product := service.repository.FindProductBySku(sku)
+
+	if product == nil {
+		return nil
+	}
+
 	return &dto.Product{
-		Sku:       sku,
-		Name:      "Sku name",
-		Quantity:  0,
-		Reserved:  0,
-		Price:     *big.NewRat(9, 99),
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		Sku:       product.Sku,
+		Name:      product.Name,
+		Quantity:  product.Quantity,
+		Reserved:  product.Reserved,
+		Price:     product.Price,
+		CreatedAt: product.CreatedAt,
+		UpdatedAt: product.UpdatedAt,
 	}
 }
 
 func (service *productCrudService) AdjustStock(sku string, stock *dto.Stock) *dto.Product {
+	product := service.repository.FindProductBySku(sku)
+	if product == nil {
+		return nil
+	}
+
+	switch stock.Action {
+	case "ADD":
+		product.Quantity += stock.Quantity
+	case "SUBJECT":
+		product.Quantity -= stock.Quantity
+	}
+
 	return &dto.Product{
-		Sku:       sku,
-		Name:      "Sku name",
-		Quantity:  stock.Quantity,
-		Reserved:  0,
-		Price:     *big.NewRat(9, 99),
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		Sku:       product.Sku,
+		Name:      product.Name,
+		Quantity:  product.Quantity,
+		Reserved:  product.Reserved,
+		Price:     product.Price,
+		CreatedAt: product.CreatedAt,
+		UpdatedAt: product.UpdatedAt,
 	}
 }

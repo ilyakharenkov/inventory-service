@@ -8,7 +8,6 @@ import (
 type ProductRepository interface {
 	CreateProduct(product *model.Product) *model.Product
 	FindProductBySku(sku string) *model.Product
-	AdjustStock(sku string, quantity int64) *model.Product
 }
 
 func NewProductRepository() ProductRepository {
@@ -40,11 +39,4 @@ func (repository *productRepositoryPostgres) FindProductBySku(sku string) *model
 		}
 	}
 	return nil
-}
-
-func (repository *productRepositoryPostgres) AdjustStock(sku string, quantity int64) *model.Product {
-	repository.mu.RLock()
-	defer repository.mu.RUnlock()
-
-	return &model.Product{}
 }

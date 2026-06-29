@@ -1,17 +1,14 @@
 package api
 
 import (
-	"fmt"
-	"inventoiry-service/api/dto"
 	"inventoiry-service/internal/service"
-	"math/big"
-	"time"
+	"inventoiry-service/internal/service/dto"
 )
 
 type ProductHandler interface {
-	CreateProduct(request *dto.ProductRequest) *dto.ProductResponse
-	FindProductBySku(sku string) *dto.ProductResponse
-	AdjustStock(sku string, request *dto.StockRequest) *dto.ProductResponse
+	CreateProduct(request *dto.Product) *dto.Product
+	FindProductBySku(sku string) *dto.Product
+	AdjustStock(sku string, request *dto.Stock) *dto.Product
 }
 
 func NewProductHttpHandler(service service.ProductService) ProductHandler {
@@ -22,42 +19,22 @@ type productHttpHandler struct {
 	service service.ProductService
 }
 
-func (handler *productHttpHandler) CreateProduct(request *dto.ProductRequest) *dto.ProductResponse {
-	fmt.Printf("Body: %v\n", request)
-	return &dto.ProductResponse{
-		Sku:       request.Sku,
-		Name:      request.Name,
-		Quantity:  request.Quantity,
-		Reserved:  request.Reserved,
-		Price:     request.Price,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
+func (handler *productHttpHandler) CreateProduct(request *dto.Product) *dto.Product {
+	return handler.service.CreateProduct(request)
 }
 
-func (handler *productHttpHandler) FindProductBySku(sku string) *dto.ProductResponse {
-	fmt.Printf("Sku: %v\n", sku)
-	return &dto.ProductResponse{
-		Sku:       sku,
-		Name:      "Sku name",
-		Quantity:  0,
-		Reserved:  0,
-		Price:     *big.NewRat(9, 99),
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+func (handler *productHttpHandler) FindProductBySku(sku string) *dto.Product {
+	product := handler.service.FindProductBySku(sku)
+	if product == nil {
+		return nil
 	}
+	return product
 }
 
-func (handler *productHttpHandler) AdjustStock(sku string, request *dto.StockRequest) *dto.ProductResponse {
-	fmt.Printf("Sku: %v\n", sku)
-	fmt.Printf("Body: %v\n", request)
-	return &dto.ProductResponse{
-		Sku:       sku,
-		Name:      "Sku name",
-		Quantity:  request.Quantity,
-		Reserved:  0,
-		Price:     *big.NewRat(9, 99),
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+func (handler *productHttpHandler) AdjustStock(sku string, request *dto.Stock) *dto.Product {
+	product := handler.service.AdjustStock(sku, request)
+	if product == nil {
+		return nil
 	}
+	return product
 }
