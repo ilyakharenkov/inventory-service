@@ -8,7 +8,10 @@ import (
 )
 
 type ProductHandler interface {
-	RegisterRoutes(mux *http.ServeMux)
+	FindAllProducts(w http.ResponseWriter, r *http.Request)
+	CreateProduct(w http.ResponseWriter, r *http.Request)
+	FindProductBySku(w http.ResponseWriter, r *http.Request)
+	AdjustStock(w http.ResponseWriter, r *http.Request)
 }
 
 type productHttpHandler struct {
@@ -19,18 +22,14 @@ func NewProductHttpHandler(service service.ProductService) ProductHandler {
 	return &productHttpHandler{service: service}
 }
 
-func (handler *productHttpHandler) RegisterRoutes(mux *http.ServeMux) {
-	mux.HandleFunc("/products", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodPost:
-			handler.CreateProduct(w, r)
-		case http.MethodGet:
-			handler.FindProductBySku(w, r)
-		default:
-			w.WriteHeader(http.StatusMethodNotAllowed)
-		}
-	})
-	mux.HandleFunc("/products/stock", handler.AdjustStock)
+func (handler *productHttpHandler) FindAllProducts(w http.ResponseWriter, r *http.Request) {
+	response := handler.service.FindAllProducts()
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func (handler *productHttpHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
@@ -49,9 +48,8 @@ func (handler *productHttpHandler) CreateProduct(w http.ResponseWriter, r *http.
 }
 
 func (handler *productHttpHandler) FindProductBySku(w http.ResponseWriter, r *http.Request) {
-	sku := r.URL.Query().Get("sku")
+	sku := r.PathValue("sku")
 	response := handler.service.FindProductBySku(sku)
-
 	if response == nil {
 		http.Error(w, "product by sku not found", http.StatusNotFound)
 		return
@@ -66,6 +64,11 @@ func (handler *productHttpHandler) FindProductBySku(w http.ResponseWriter, r *ht
 }
 
 func (handler *productHttpHandler) AdjustStock(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPatch {
+		http.Error(w, "Method not allowed. Use PATCH or POST", http.StatusMethodNotAllowed)
+		return
+	}
+
 	var requestBody dto.Stock
 	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

@@ -7,11 +7,8 @@ import (
 	"time"
 )
 
-func NewProductService(repository repository.ProductRepository) ProductService {
-	return &productCrudService{repository: repository}
-}
-
 type ProductService interface {
+	FindAllProducts() []dto.Product
 	CreateProduct(product *dto.Product) *dto.Product
 	FindProductBySku(sku string) *dto.Product
 	AdjustStock(sku string, stock *dto.Stock) *dto.Product
@@ -19,6 +16,22 @@ type ProductService interface {
 
 type productCrudService struct {
 	repository repository.ProductRepository
+}
+
+func NewProductService(repository repository.ProductRepository) ProductService {
+	return &productCrudService{repository: repository}
+}
+
+func (service *productCrudService) FindAllProducts() []dto.Product {
+	products := service.repository.FindAllProducts()
+
+	productsResponse := make([]dto.Product, len(products))
+
+	for i, v := range products {
+		productsResponse[i] = dto.Product(v)
+	}
+
+	return productsResponse
 }
 
 func (service *productCrudService) CreateProduct(product *dto.Product) *dto.Product {

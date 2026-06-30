@@ -13,10 +13,12 @@ func main() {
 	productService := service.NewProductService(productRepository)
 	productHandler := handlers.NewProductHttpHandler(productService)
 
-	mux := http.NewServeMux()
-	productHandler.RegisterRoutes(mux)
+	http.HandleFunc("POST /products", productHandler.CreateProduct)
+	http.HandleFunc("GET /products", productHandler.FindAllProducts)
+	http.HandleFunc("PATCH /products/stock", productHandler.AdjustStock)
+	http.HandleFunc("GET /products/{sku}", productHandler.FindProductBySku)
 
-	if err := http.ListenAndServe("localhost:8080", mux); err != nil {
+	if err := http.ListenAndServe("localhost:8080", nil); err != nil {
 		fmt.Println(err)
 	}
 }

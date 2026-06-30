@@ -8,17 +8,18 @@ import (
 type ProductRepository interface {
 	CreateProduct(product *model.Product) *model.Product
 	FindProductBySku(sku string) *model.Product
+	FindAllProducts() []model.Product
+}
+
+type productRepositoryPostgres struct {
+	products []model.Product
+	mu       sync.RWMutex
 }
 
 func NewProductRepository() ProductRepository {
 	return &productRepositoryPostgres{
 		products: make([]model.Product, 0),
 	}
-}
-
-type productRepositoryPostgres struct {
-	products []model.Product
-	mu       sync.RWMutex
 }
 
 func (repository *productRepositoryPostgres) CreateProduct(product *model.Product) *model.Product {
@@ -39,4 +40,11 @@ func (repository *productRepositoryPostgres) FindProductBySku(sku string) *model
 		}
 	}
 	return nil
+}
+
+func (repository *productRepositoryPostgres) FindAllProducts() []model.Product {
+	repository.mu.RLock()
+	defer repository.mu.RUnlock()
+
+	return repository.products
 }
