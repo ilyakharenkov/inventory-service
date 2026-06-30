@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"inventory-service/internal/pkg/utils"
 	"inventory-service/internal/service"
 	"inventory-service/internal/service/dto"
 	"net/http"
@@ -15,11 +16,15 @@ type ProductHandler interface {
 }
 
 type productHttpHandler struct {
-	service service.ProductService
+	service  service.ProductService
+	validate utils.CustomValidator
 }
 
-func NewProductHttpHandler(service service.ProductService) ProductHandler {
-	return &productHttpHandler{service: service}
+func NewProductHttpHandler(service service.ProductService, cv *utils.CustomValidator) ProductHandler {
+	return &productHttpHandler{
+		service:  service,
+		validate: *cv,
+	}
 }
 
 func (handler *productHttpHandler) FindAllProducts(w http.ResponseWriter, r *http.Request) {
@@ -38,6 +43,12 @@ func (handler *productHttpHandler) CreateProduct(w http.ResponseWriter, r *http.
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	if err := handler.validate.Validate(requestBody); err != nil {
+		http.Error(w, "Error validation", http.StatusBadRequest)
+		return
+	}
+
 	response := handler.service.CreateProduct(&requestBody)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
