@@ -64,11 +64,6 @@ func (handler *productHttpHandler) FindProductBySku(w http.ResponseWriter, r *ht
 }
 
 func (handler *productHttpHandler) AdjustStock(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPatch {
-		http.Error(w, "Method not allowed. Use PATCH or POST", http.StatusMethodNotAllowed)
-		return
-	}
-
 	var requestBody dto.Stock
 	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
