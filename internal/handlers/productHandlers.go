@@ -29,12 +29,7 @@ func NewProductHttpHandler(service service.ProductService, cv *utils.CustomValid
 
 func (handler *productHttpHandler) FindAllProducts(w http.ResponseWriter, r *http.Request) {
 	response := handler.service.FindAllProducts()
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	BaseResponse(response, w, http.StatusOK)
 }
 
 func (handler *productHttpHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
@@ -50,12 +45,7 @@ func (handler *productHttpHandler) CreateProduct(w http.ResponseWriter, r *http.
 	}
 
 	response := handler.service.CreateProduct(&requestBody)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	BaseResponse(response, w, http.StatusCreated)
 }
 
 func (handler *productHttpHandler) FindProductBySku(w http.ResponseWriter, r *http.Request) {
@@ -66,12 +56,7 @@ func (handler *productHttpHandler) FindProductBySku(w http.ResponseWriter, r *ht
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	BaseResponse(response, w, http.StatusOK)
 }
 
 func (handler *productHttpHandler) AdjustStock(w http.ResponseWriter, r *http.Request) {
@@ -88,10 +73,5 @@ func (handler *productHttpHandler) AdjustStock(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	BaseResponse(response, w, http.StatusOK)
 }
