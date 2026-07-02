@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:latest  # последняя стабильная версия
+    container_name: postgres_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: admin        # пользователь БД
+      POSTGRES_PASSWORD: password   # пароль
+      POSTGRES_DB: inventory-db     # имя БД по умолчанию
+      PGDATA: /var/lib/postgresql/data/pgdata  # путь к данным внутри контейнера
+    ports:
+      - "5432:5432"  # host:container
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # постоянное хранилище
+      - ./backups:/backups  # для бэкапов (опционально)
+      - ./init-scripts:/docker-entrypoint-initdb.d  # скрипты инициализации
+    networks:
+      - postgres_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d mydatabase"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # pgAdmin для управления БД
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - postgres_network
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
+    name: postgres_data_volume
+  pgadmin_data:
+    name: pgadmin_data_volume
+
+networks:
+  postgres_network:
+    name: postgres_network
+    driver: bridge
