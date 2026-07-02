@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"inventory-service/configs"
 	"inventory-service/internal/handlers"
 	"inventory-service/internal/pkg/utils"
 	"inventory-service/internal/repository"
@@ -10,6 +11,8 @@ import (
 )
 
 func main() {
+	postgresConfig := configs.PostgresConfig()
+
 	cv := utils.NewCustomValidator()
 
 	productRepository := repository.NewProductRepository()
