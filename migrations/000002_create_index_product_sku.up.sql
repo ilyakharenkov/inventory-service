@@ -1,0 +1,1 @@
+CREATE INDEX idx_product_sku ON product_t(sku);

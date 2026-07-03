@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"inventory-service/configs"
 	"inventory-service/internal/handlers"
-	"inventory-service/internal/pkg/utils"
 	"inventory-service/internal/repository"
 	"inventory-service/internal/service"
+	"inventory-service/pkg/utils"
 	"log"
 	"net/http"
 
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/lib/pq"
 )
 
@@ -29,7 +31,25 @@ func main() {
 		}
 	}(db)
 
-	productRepository := repository.NewProductRepository()
+	//m, err := migrate.New(
+	//	"file://migrations",
+	//	"postgres://user:pass@localhost:5432/dbname?sslmode=disable",
+	//)
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	//defer func(m *migrate.Migrate) {
+	//	err, _ := m.Close()
+	//	if err != nil {
+	//		log.Fatal(err)
+	//	}
+	//}(m)
+	//// Применить все миграции
+	//if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
+	//	log.Fatal(err)
+	//}
+
+	productRepository := repository.NewProductRepository(db)
 	productService := service.NewProductService(productRepository)
 	productHandler := handlers.NewProductHttpHandler(productService, utils.NewCustomValidator())
 

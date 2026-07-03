@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"database/sql"
 	"inventory-service/internal/repository/model"
 	"sync"
 )
@@ -16,7 +17,7 @@ type productRepositoryPostgres struct {
 	mu       sync.RWMutex
 }
 
-func NewProductRepository() ProductRepository {
+func NewProductRepository(db *sql.DB) ProductRepository {
 	return &productRepositoryPostgres{
 		products: make([]model.Product, 0),
 	}

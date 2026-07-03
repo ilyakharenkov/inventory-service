@@ -2,9 +2,9 @@ package handlers
 
 import (
 	"encoding/json"
-	"inventory-service/internal/pkg/utils"
 	"inventory-service/internal/service"
 	"inventory-service/internal/service/dto"
+	"inventory-service/pkg/utils"
 	"net/http"
 )
 

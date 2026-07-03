@@ -4,6 +4,7 @@ module inventory-service
 
 require (
 	github.com/go-playground/validator/v10 v10.30.3
+	github.com/golang-migrate/migrate/v4 v4.19.1
 	github.com/lib/pq v1.12.3
 )
 
