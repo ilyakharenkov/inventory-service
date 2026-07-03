@@ -14,7 +14,7 @@ services:
       - "5432:5432"  # host:container
     volumes:
       - postgres_data:/var/lib/postgresql/data  # постоянное хранилище
-      - ./backups:/backups  # для бэкапов (опционально)
+      - ./backups:/backups  # для бэкапов
       - ./init-scripts:/docker-entrypoint-initdb.d  # скрипты инициализации
     networks:
       - postgres_network

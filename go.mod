@@ -2,7 +2,10 @@ go 1.26.3
 
 module inventory-service
 
-require github.com/go-playground/validator/v10 v10.30.3
+require (
+	github.com/go-playground/validator/v10 v10.30.3
+	github.com/lib/pq v1.12.3
+)
 
 require (
 	github.com/gabriel-vasile/mimetype v1.4.13 // indirect
