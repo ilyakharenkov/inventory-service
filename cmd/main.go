@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"inventory-service/configs"
 	"inventory-service/internal/handlers"
@@ -11,6 +12,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/lib/pq"
@@ -31,23 +33,23 @@ func main() {
 		}
 	}(db)
 
-	//m, err := migrate.New(
-	//	"file://migrations",
-	//	"postgres://user:pass@localhost:5432/dbname?sslmode=disable",
-	//)
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-	//defer func(m *migrate.Migrate) {
-	//	err, _ := m.Close()
-	//	if err != nil {
-	//		log.Fatal(err)
-	//	}
-	//}(m)
-	//// Применить все миграции
-	//if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
-	//	log.Fatal(err)
-	//}
+	m, err := migrate.New(
+		"file://migrations",
+		"postgres://admin:password@localhost:5432/inventory-db?sslmode=disable",
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func(m *migrate.Migrate) {
+		err, _ := m.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}(m)
+	// Применить все миграции
+	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
+		log.Fatal(err)
+	}
 
 	productRepository := repository.NewProductRepository(db)
 	productService := service.NewProductService(productRepository)
