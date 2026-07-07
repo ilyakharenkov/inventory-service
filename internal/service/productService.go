@@ -28,7 +28,15 @@ func (service *productCrudService) FindAllProducts() []dto.Product {
 	productsResponse := make([]dto.Product, len(products))
 
 	for i, v := range products {
-		productsResponse[i] = dto.Product(v)
+		productsResponse[i] = dto.Product{
+			Sku:       v.Sku,
+			Name:      v.Name,
+			Quantity:  v.Quantity,
+			Reserved:  v.Reserved,
+			Price:     v.Price,
+			CreatedAt: v.CreatedAt,
+			UpdatedAt: v.UpdatedAt,
+		}
 	}
 
 	return productsResponse
