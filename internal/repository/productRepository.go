@@ -110,9 +110,9 @@ func (repository *productRepositoryPostgres) FindAllProducts() []model.Product {
 func (repository *productRepositoryPostgres) AdjustStock(sku string, action string, quantity int64) *model.Product {
 	query := `UPDATE product_t SET quantity = CASE 
    				WHEN $1 = 'ADD' THEN quantity + $2
-   				WHEN $1 = 'SUBTRACT' THEN quantity + $2
+   				WHEN $1 = 'SUBTRACT' THEN quantity - $2
     			ELSE quantity
-    			END WHERE product_t.sku = $3`
+    			END WHERE product_t.sku = $3 RETURNING *`
 
 	product := &model.Product{}
 	err := repository.db.QueryRow(query, action, quantity, sku).Scan(
