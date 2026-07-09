@@ -85,17 +85,7 @@ func (service *productCrudService) FindProductBySku(sku string) *dto.Product {
 }
 
 func (service *productCrudService) AdjustStock(sku string, stock *dto.Stock) *dto.Product {
-	product := service.repository.FindProductBySku(sku)
-	if product == nil {
-		return nil
-	}
-
-	switch stock.Action {
-	case "ADD":
-		product.Quantity += stock.Quantity
-	case "SUBJECT":
-		product.Quantity -= stock.Quantity
-	}
+	product := service.repository.AdjustStock(sku, stock.Action, stock.Quantity)
 
 	return &dto.Product{
 		Sku:       product.Sku,

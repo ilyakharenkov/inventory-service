@@ -11,6 +11,7 @@ type ProductRepository interface {
 	CreateProduct(product *model.Product) *model.Product
 	FindProductBySku(sku string) *model.Product
 	FindAllProducts() []model.Product
+	AdjustStock(sku string, action string, quantity int64) *model.Product
 }
 
 type productRepositoryPostgres struct {
@@ -51,15 +52,22 @@ func (repository *productRepositoryPostgres) CreateProduct(product *model.Produc
 }
 
 func (repository *productRepositoryPostgres) FindProductBySku(sku string) *model.Product {
-	repository.mu.RLock()
-	defer repository.mu.RUnlock()
-
-	for index := range repository.products {
-		if repository.products[index].Sku == sku {
-			return &repository.products[index]
-		}
+	query := `SELECT * FROM product_t WHERE product_t.sku = $1`
+	product := &model.Product{}
+	err := repository.db.QueryRow(query, sku).Scan(
+		&product.Id,
+		&product.Sku,
+		&product.Name,
+		&product.Quantity,
+		&product.Reserved,
+		&product.Price,
+		&product.CreatedAt,
+		&product.UpdatedAt)
+	if err != nil {
+		return nil
 	}
-	return nil
+
+	return product
 }
 
 func (repository *productRepositoryPostgres) FindAllProducts() []model.Product {
@@ -97,4 +105,28 @@ func (repository *productRepositoryPostgres) FindAllProducts() []model.Product {
 	}
 
 	return products
+}
+
+func (repository *productRepositoryPostgres) AdjustStock(sku string, action string, quantity int64) *model.Product {
+	query := `UPDATE product_t SET quantity = CASE 
+   				WHEN $1 = 'ADD' THEN quantity + $2
+   				WHEN $1 = 'SUBTRACT' THEN quantity + $2
+    			ELSE quantity
+    			END WHERE product_t.sku = $3`
+
+	product := &model.Product{}
+	err := repository.db.QueryRow(query, action, quantity, sku).Scan(
+		&product.Id,
+		&product.Sku,
+		&product.Name,
+		&product.Quantity,
+		&product.Reserved,
+		&product.Price,
+		&product.CreatedAt,
+		&product.UpdatedAt)
+	if err != nil {
+		return nil
+	}
+
+	return product
 }
