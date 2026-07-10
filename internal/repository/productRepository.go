@@ -2,6 +2,8 @@ package repository
 
 import (
 	"database/sql"
+	"errors"
+	"fmt"
 	"inventory-service/internal/repository/model"
 	"log"
 	"sync"
@@ -64,6 +66,9 @@ func (repository *productRepositoryPostgres) FindProductBySku(sku string) *model
 		&product.CreatedAt,
 		&product.UpdatedAt)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			fmt.Printf("Product not found: %s\n", sku)
+		}
 		return nil
 	}
 
@@ -100,6 +105,9 @@ func (repository *productRepositoryPostgres) FindAllProducts() []model.Product {
 	}
 
 	if err = rows.Err(); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			fmt.Println("Products not found")
+		}
 		log.Printf("Rows error: %v", err)
 		return nil
 	}
@@ -108,11 +116,15 @@ func (repository *productRepositoryPostgres) FindAllProducts() []model.Product {
 }
 
 func (repository *productRepositoryPostgres) AdjustStock(sku string, action string, quantity int64) *model.Product {
-	query := `UPDATE product_t SET quantity = CASE 
-   				WHEN $1 = 'ADD' THEN quantity + $2
-   				WHEN $1 = 'SUBTRACT' THEN quantity - $2
-    			ELSE quantity
-    			END WHERE product_t.sku = $3 RETURNING *`
+	query := `UPDATE product_t
+			  SET quantity = CASE
+              	WHEN $1 = 'ADD' THEN quantity + $2
+                WHEN $1 = 'SUBTRACT' THEN GREATEST(quantity - $2, 0)
+                ELSE quantity
+    		  END,
+    		  updated_at = NOW()
+			  WHERE product_t.sku = $3
+			  RETURNING *`
 
 	product := &model.Product{}
 	err := repository.db.QueryRow(query, action, quantity, sku).Scan(
@@ -124,7 +136,11 @@ func (repository *productRepositoryPostgres) AdjustStock(sku string, action stri
 		&product.Price,
 		&product.CreatedAt,
 		&product.UpdatedAt)
+
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			fmt.Printf("Product not found: %s\n", sku)
+		}
 		return nil
 	}
 
