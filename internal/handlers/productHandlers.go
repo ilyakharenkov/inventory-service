@@ -66,7 +66,11 @@ func (handler *productHttpHandler) AdjustStock(w http.ResponseWriter, r *http.Re
 		return
 	}
 	sku := r.URL.Query().Get("sku")
-	response := handler.service.AdjustStock(sku, &requestBody)
+	response, err := handler.service.AdjustStock(sku, &requestBody)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	if response == nil {
 		http.Error(w, "product by sku not found", http.StatusNotFound)

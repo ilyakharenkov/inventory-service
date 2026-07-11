@@ -12,7 +12,7 @@ type ProductService interface {
 	FindAllProducts() []dto.Product
 	CreateProduct(product *dto.Product) *dto.Product
 	FindProductBySku(sku string) *dto.Product
-	AdjustStock(sku string, stock *dto.Stock) *dto.Product
+	AdjustStock(sku string, stock *dto.Stock) (*dto.Product, error)
 }
 
 type productCrudService struct {
@@ -85,7 +85,7 @@ func (service *productCrudService) FindProductBySku(sku string) *dto.Product {
 	}
 }
 
-func (service *productCrudService) AdjustStock(sku string, stock *dto.Stock) *dto.Product {
+func (service *productCrudService) AdjustStock(sku string, stock *dto.Stock) (*dto.Product, error) {
 	switch stock.Action {
 	case "SUBTRACT":
 		stock.Quantity = -stock.Quantity
@@ -94,7 +94,7 @@ func (service *productCrudService) AdjustStock(sku string, stock *dto.Stock) *dt
 	product, err := service.repository.AdjustStock(sku, stock.Quantity)
 	if err != nil {
 		fmt.Println(err)
-		return nil
+		return nil, err
 	}
 
 	return &dto.Product{
@@ -105,5 +105,5 @@ func (service *productCrudService) AdjustStock(sku string, stock *dto.Stock) *dt
 		Price:     product.Price,
 		CreatedAt: product.CreatedAt,
 		UpdatedAt: product.UpdatedAt,
-	}
+	}, nil
 }

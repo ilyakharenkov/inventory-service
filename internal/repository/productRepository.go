@@ -135,9 +135,9 @@ func (repository *productRepositoryPostgres) AdjustStock(sku string, quantity in
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, fmt.Errorf("Product not found: %s\n", sku)
+			return nil, fmt.Errorf("Error: %s\n", err)
 		}
-		return nil, fmt.Errorf("Product not found: %s\n", sku)
+		return nil, fmt.Errorf("Error: %s\n", err)
 	}
 
 	return product, nil
