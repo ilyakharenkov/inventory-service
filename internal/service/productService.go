@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"inventory-service/internal/repository"
 	"inventory-service/internal/repository/model"
 	"inventory-service/internal/service/dto"
@@ -93,7 +92,6 @@ func (service *productCrudService) AdjustStock(sku string, stock *dto.Stock) (*d
 
 	product, err := service.repository.AdjustStock(sku, stock.Quantity)
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 
