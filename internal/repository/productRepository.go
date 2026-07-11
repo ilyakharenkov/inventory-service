@@ -13,7 +13,7 @@ type ProductRepository interface {
 	CreateProduct(product *model.Product) *model.Product
 	FindProductBySku(sku string) *model.Product
 	FindAllProducts() []model.Product
-	AdjustStock(sku string, action string, quantity int64) *model.Product
+	AdjustStock(sku string, quantity int64) (*model.Product, error)
 }
 
 type productRepositoryPostgres struct {
@@ -115,19 +115,15 @@ func (repository *productRepositoryPostgres) FindAllProducts() []model.Product {
 	return products
 }
 
-func (repository *productRepositoryPostgres) AdjustStock(sku string, action string, quantity int64) *model.Product {
+func (repository *productRepositoryPostgres) AdjustStock(sku string, quantity int64) (*model.Product, error) {
 	query := `UPDATE product_t
-			  SET quantity = CASE
-              	WHEN $1 = 'ADD' THEN quantity + $2
-                WHEN $1 = 'SUBTRACT' THEN GREATEST(quantity - $2, 0)
-                ELSE quantity
-    		  END,
-    		  updated_at = NOW()
-			  WHERE product_t.sku = $3
-			  RETURNING *`
+			  SET quantity = quantity + $1, updated_at = NOW()
+			  WHERE sku = $2
+			  AND quantity + $1 >= 0
+			  RETURNING id, sku, name, quantity, reserved, price, created_at, updated_at`
 
 	product := &model.Product{}
-	err := repository.db.QueryRow(query, action, quantity, sku).Scan(
+	err := repository.db.QueryRow(query, quantity, sku).Scan(
 		&product.Id,
 		&product.Sku,
 		&product.Name,
@@ -139,10 +135,10 @@ func (repository *productRepositoryPostgres) AdjustStock(sku string, action stri
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			fmt.Printf("Product not found: %s\n", sku)
+			return nil, fmt.Errorf("Product not found: %s\n", sku)
 		}
-		return nil
+		return nil, fmt.Errorf("Product not found: %s\n", sku)
 	}
 
-	return product
+	return product, nil
 }

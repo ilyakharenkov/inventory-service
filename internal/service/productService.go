@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"inventory-service/internal/repository"
 	"inventory-service/internal/repository/model"
 	"inventory-service/internal/service/dto"
@@ -85,7 +86,16 @@ func (service *productCrudService) FindProductBySku(sku string) *dto.Product {
 }
 
 func (service *productCrudService) AdjustStock(sku string, stock *dto.Stock) *dto.Product {
-	product := service.repository.AdjustStock(sku, stock.Action, stock.Quantity)
+	switch stock.Action {
+	case "SUBTRACT":
+
+	}
+
+	product, err := service.repository.AdjustStock(sku, stock.Quantity)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
 
 	return &dto.Product{
 		Sku:       product.Sku,
