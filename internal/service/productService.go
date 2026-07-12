@@ -8,9 +8,9 @@ import (
 )
 
 type ProductService interface {
-	FindAllProducts() []dto.Product
-	CreateProduct(product *dto.Product) *dto.Product
-	FindProductBySku(sku string) *dto.Product
+	FindAllProducts() ([]dto.Product, error)
+	CreateProduct(product *dto.Product) (*dto.Product, error)
+	FindProductBySku(sku string) (*dto.Product, error)
 	AdjustStock(sku string, stock *dto.Stock) (*dto.Product, error)
 }
 
@@ -22,10 +22,10 @@ func NewProductService(repository repository.ProductRepository) ProductService {
 	return &productCrudService{repository: repository}
 }
 
-func (service *productCrudService) FindAllProducts() []dto.Product {
+func (service *productCrudService) FindAllProducts() ([]dto.Product, error) {
 	products, err := service.repository.FindAllProducts()
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
 	productsResponse := make([]dto.Product, len(products))
@@ -42,10 +42,10 @@ func (service *productCrudService) FindAllProducts() []dto.Product {
 		}
 	}
 
-	return productsResponse
+	return productsResponse, nil
 }
 
-func (service *productCrudService) CreateProduct(product *dto.Product) *dto.Product {
+func (service *productCrudService) CreateProduct(product *dto.Product) (*dto.Product, error) {
 	productEntity := model.Product{
 		Sku:       product.Sku,
 		Name:      product.Name,
@@ -59,7 +59,7 @@ func (service *productCrudService) CreateProduct(product *dto.Product) *dto.Prod
 	p, err := service.repository.CreateProduct(&productEntity)
 
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
 	return &dto.Product{
@@ -70,18 +70,14 @@ func (service *productCrudService) CreateProduct(product *dto.Product) *dto.Prod
 		Price:     p.Price,
 		CreatedAt: p.CreatedAt,
 		UpdatedAt: p.UpdatedAt,
-	}
+	}, nil
 }
 
-func (service *productCrudService) FindProductBySku(sku string) *dto.Product {
+func (service *productCrudService) FindProductBySku(sku string) (*dto.Product, error) {
 	product, err := service.repository.FindProductBySku(sku)
 
 	if err != nil {
-		return nil
-	}
-
-	if product == nil {
-		return nil
+		return nil, err
 	}
 
 	return &dto.Product{
@@ -92,7 +88,7 @@ func (service *productCrudService) FindProductBySku(sku string) *dto.Product {
 		Price:     product.Price,
 		CreatedAt: product.CreatedAt,
 		UpdatedAt: product.UpdatedAt,
-	}
+	}, nil
 }
 
 func (service *productCrudService) AdjustStock(sku string, stock *dto.Stock) (*dto.Product, error) {

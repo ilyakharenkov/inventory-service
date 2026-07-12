@@ -28,7 +28,11 @@ func NewProductHttpHandler(service service.ProductService, cv *utils.CustomValid
 }
 
 func (handler *productHttpHandler) FindAllProducts(w http.ResponseWriter, r *http.Request) {
-	response := handler.service.FindAllProducts()
+	response, err := handler.service.FindAllProducts()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	BaseResponse(response, w, http.StatusOK)
 }
 
@@ -44,15 +48,20 @@ func (handler *productHttpHandler) CreateProduct(w http.ResponseWriter, r *http.
 		return
 	}
 
-	response := handler.service.CreateProduct(&requestBody)
+	response, err := handler.service.CreateProduct(&requestBody)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	BaseResponse(response, w, http.StatusCreated)
 }
 
 func (handler *productHttpHandler) FindProductBySku(w http.ResponseWriter, r *http.Request) {
 	sku := r.PathValue("sku")
-	response := handler.service.FindProductBySku(sku)
-	if response == nil {
-		http.Error(w, "product by sku not found", http.StatusNotFound)
+	response, err := handler.service.FindProductBySku(sku)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
