@@ -23,7 +23,10 @@ func NewProductService(repository repository.ProductRepository) ProductService {
 }
 
 func (service *productCrudService) FindAllProducts() []dto.Product {
-	products := service.repository.FindAllProducts()
+	products, err := service.repository.FindAllProducts()
+	if err != nil {
+		return nil
+	}
 
 	productsResponse := make([]dto.Product, len(products))
 
@@ -53,7 +56,11 @@ func (service *productCrudService) CreateProduct(product *dto.Product) *dto.Prod
 		UpdatedAt: time.Time{},
 	}
 
-	p := service.repository.CreateProduct(&productEntity)
+	p, err := service.repository.CreateProduct(&productEntity)
+
+	if err != nil {
+		return nil
+	}
 
 	return &dto.Product{
 		Sku:       p.Sku,
@@ -67,7 +74,11 @@ func (service *productCrudService) CreateProduct(product *dto.Product) *dto.Prod
 }
 
 func (service *productCrudService) FindProductBySku(sku string) *dto.Product {
-	product := service.repository.FindProductBySku(sku)
+	product, err := service.repository.FindProductBySku(sku)
+
+	if err != nil {
+		return nil
+	}
 
 	if product == nil {
 		return nil

@@ -10,9 +10,9 @@ import (
 )
 
 type ProductRepository interface {
-	CreateProduct(product *model.Product) *model.Product
-	FindProductBySku(sku string) *model.Product
-	FindAllProducts() []model.Product
+	CreateProduct(product *model.Product) (*model.Product, error)
+	FindProductBySku(sku string) (*model.Product, error)
+	FindAllProducts() ([]model.Product, error)
 	AdjustStock(sku string, quantity int64) (*model.Product, error)
 }
 
@@ -28,13 +28,13 @@ func NewProductRepository(db *sql.DB) ProductRepository {
 	}
 }
 
-func (repository *productRepositoryPostgres) CreateProduct(product *model.Product) *model.Product {
+func (repository *productRepositoryPostgres) CreateProduct(product *model.Product) (*model.Product, error) {
 	query := `INSERT INTO product_t (sku, name, quantity, reserved, price, created_at, updated_at) 
               VALUES ($1, $2, $3, $4, $5, $6, $7) 
               RETURNING id`
 
-	var id int64
 	err := repository.db.QueryRow(query,
+		product.Id,
 		product.Sku,
 		product.Name,
 		product.Quantity,
@@ -42,18 +42,25 @@ func (repository *productRepositoryPostgres) CreateProduct(product *model.Produc
 		product.Price,
 		product.CreatedAt,
 		product.UpdatedAt,
-	).Scan(&id)
+	).Scan(
+		&product.Id,
+		&product.Sku,
+		&product.Name,
+		&product.Quantity,
+		&product.Reserved,
+		&product.Price,
+		&product.CreatedAt,
+		&product.UpdatedAt)
 
 	if err != nil {
 		log.Printf("Failed to create product: %v", err)
-		return nil
+		return nil, err
 	}
 
-	product.Id = id
-	return product
+	return product, nil
 }
 
-func (repository *productRepositoryPostgres) FindProductBySku(sku string) *model.Product {
+func (repository *productRepositoryPostgres) FindProductBySku(sku string) (*model.Product, error) {
 	query := `SELECT * FROM product_t WHERE product_t.sku = $1`
 	product := &model.Product{}
 	err := repository.db.QueryRow(query, sku).Scan(
@@ -69,17 +76,17 @@ func (repository *productRepositoryPostgres) FindProductBySku(sku string) *model
 		if errors.Is(err, sql.ErrNoRows) {
 			fmt.Printf("Product not found: %s\n", sku)
 		}
-		return nil
+		return nil, err
 	}
 
-	return product
+	return product, nil
 }
 
-func (repository *productRepositoryPostgres) FindAllProducts() []model.Product {
+func (repository *productRepositoryPostgres) FindAllProducts() ([]model.Product, error) {
 	query := "SELECT * FROM product_t"
 	rows, err := repository.db.Query(query)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 	defer func(rows *sql.Rows) {
 		err := rows.Close()
@@ -99,7 +106,7 @@ func (repository *productRepositoryPostgres) FindAllProducts() []model.Product {
 			&product.CreatedAt,
 			&product.UpdatedAt)
 		if err != nil {
-			return nil
+			return nil, err
 		}
 		products = append(products, product)
 	}
@@ -109,10 +116,10 @@ func (repository *productRepositoryPostgres) FindAllProducts() []model.Product {
 			fmt.Println("Products not found")
 		}
 		log.Printf("Rows error: %v", err)
-		return nil
+		return nil, err
 	}
 
-	return products
+	return products, nil
 }
 
 func (repository *productRepositoryPostgres) AdjustStock(sku string, quantity int64) (*model.Product, error) {
