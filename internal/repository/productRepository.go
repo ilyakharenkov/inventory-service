@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"inventory-service/internal/repository/model"
 	"log"
-	"sync"
 )
 
 type ProductRepository interface {
@@ -17,9 +16,7 @@ type ProductRepository interface {
 }
 
 type productRepositoryPostgres struct {
-	db       *sql.DB
-	mu       sync.RWMutex
-	products []model.Product
+	db *sql.DB
 }
 
 func NewProductRepository(db *sql.DB) ProductRepository {
@@ -34,7 +31,6 @@ func (repository *productRepositoryPostgres) CreateProduct(product *model.Produc
               RETURNING id`
 
 	err := repository.db.QueryRow(query,
-		product.Id,
 		product.Sku,
 		product.Name,
 		product.Quantity,
@@ -42,15 +38,7 @@ func (repository *productRepositoryPostgres) CreateProduct(product *model.Produc
 		product.Price,
 		product.CreatedAt,
 		product.UpdatedAt,
-	).Scan(
-		&product.Id,
-		&product.Sku,
-		&product.Name,
-		&product.Quantity,
-		&product.Reserved,
-		&product.Price,
-		&product.CreatedAt,
-		&product.UpdatedAt)
+	).Scan(&product.Id)
 
 	if err != nil {
 		log.Printf("Failed to create product: %v", err)
@@ -63,15 +51,9 @@ func (repository *productRepositoryPostgres) CreateProduct(product *model.Produc
 func (repository *productRepositoryPostgres) FindProductBySku(sku string) (*model.Product, error) {
 	query := `SELECT * FROM product_t WHERE product_t.sku = $1`
 	product := &model.Product{}
-	err := repository.db.QueryRow(query, sku).Scan(
-		&product.Id,
-		&product.Sku,
-		&product.Name,
-		&product.Quantity,
-		&product.Reserved,
-		&product.Price,
-		&product.CreatedAt,
-		&product.UpdatedAt)
+	row := repository.db.QueryRow(query, sku)
+	product, err := scanProduct(row)
+
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			fmt.Printf("Product not found: %s\n", sku)
@@ -130,15 +112,9 @@ func (repository *productRepositoryPostgres) AdjustStock(sku string, quantity in
 			  RETURNING id, sku, name, quantity, reserved, price, created_at, updated_at`
 
 	product := &model.Product{}
-	err := repository.db.QueryRow(query, quantity, sku).Scan(
-		&product.Id,
-		&product.Sku,
-		&product.Name,
-		&product.Quantity,
-		&product.Reserved,
-		&product.Price,
-		&product.CreatedAt,
-		&product.UpdatedAt)
+	row := repository.db.QueryRow(query, quantity, sku)
+
+	product, err := scanProduct(row)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -148,4 +124,19 @@ func (repository *productRepositoryPostgres) AdjustStock(sku string, quantity in
 	}
 
 	return product, nil
+}
+
+func scanProduct(row *sql.Row) (*model.Product, error) {
+	product := &model.Product{}
+	err := row.Scan(
+		&product.Id,
+		&product.Sku,
+		&product.Name,
+		&product.Quantity,
+		&product.Reserved,
+		&product.Price,
+		&product.CreatedAt,
+		&product.UpdatedAt,
+	)
+	return product, err
 }
