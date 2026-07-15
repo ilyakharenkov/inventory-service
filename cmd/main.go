@@ -55,10 +55,10 @@ func main() {
 	productService := service.NewProductService(productRepository)
 	productHandler := handlers.NewProductHttpHandler(productService, utils.NewCustomValidator())
 
-	http.HandleFunc("POST /products", productHandler.CreateProduct)
-	http.HandleFunc("GET /products", productHandler.FindAllProducts)
-	http.HandleFunc("PATCH /products/stock", productHandler.AdjustStock)
-	http.HandleFunc("GET /products/{sku}", productHandler.FindProductBySku)
+	http.HandleFunc("POST /products", utils.SafeHandler(productHandler.CreateProduct))
+	http.HandleFunc("GET /products", utils.SafeHandler(productHandler.FindAllProducts))
+	http.HandleFunc("PATCH /products/stock", utils.SafeHandler(productHandler.AdjustStock))
+	http.HandleFunc("GET /products/{sku}", utils.SafeHandler(productHandler.FindProductBySku))
 
 	if err := http.ListenAndServe("localhost:8080", nil); err != nil {
 		fmt.Println(err)
