@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -9,10 +10,10 @@ import (
 )
 
 type ProductRepository interface {
-	CreateProduct(product *model.Product) (*model.Product, error)
-	FindProductBySku(sku string) (*model.Product, error)
-	FindAllProducts() ([]model.Product, error)
-	AdjustStock(sku string, quantity int64) (*model.Product, error)
+	CreateProduct(ctx context.Context, product *model.Product) (*model.Product, error)
+	FindProductBySku(ctx context.Context, sku string) (*model.Product, error)
+	FindAllProducts(ctx context.Context) ([]model.Product, error)
+	AdjustStock(ctx context.Context, sku string, quantity int64) (*model.Product, error)
 }
 
 type productRepositoryPostgres struct {
@@ -25,7 +26,7 @@ func NewProductRepository(db *sql.DB) ProductRepository {
 	}
 }
 
-func (repository *productRepositoryPostgres) CreateProduct(product *model.Product) (*model.Product, error) {
+func (repository *productRepositoryPostgres) CreateProduct(ctx context.Context, product *model.Product) (*model.Product, error) {
 	query := `INSERT INTO product_t (sku, name, quantity, reserved, price, created_at, updated_at) 
               VALUES ($1, $2, $3, $4, $5, $6, $7) 
               RETURNING id`
@@ -48,7 +49,7 @@ func (repository *productRepositoryPostgres) CreateProduct(product *model.Produc
 	return product, nil
 }
 
-func (repository *productRepositoryPostgres) FindProductBySku(sku string) (*model.Product, error) {
+func (repository *productRepositoryPostgres) FindProductBySku(ctx context.Context, sku string) (*model.Product, error) {
 	query := `SELECT id, sku, name, quantity, reserved, price, created_at, updated_at FROM product_t WHERE product_t.sku = $1`
 	product, err := scanProduct(repository.db.QueryRow(query, sku))
 
@@ -62,7 +63,7 @@ func (repository *productRepositoryPostgres) FindProductBySku(sku string) (*mode
 	return product, nil
 }
 
-func (repository *productRepositoryPostgres) FindAllProducts() ([]model.Product, error) {
+func (repository *productRepositoryPostgres) FindAllProducts(ctx context.Context) ([]model.Product, error) {
 	query := "SELECT id, sku, name, quantity, reserved, price, created_at, updated_at FROM product_t"
 	rows, err := repository.db.Query(query)
 	if err != nil {
@@ -86,7 +87,11 @@ func (repository *productRepositoryPostgres) FindAllProducts() ([]model.Product,
 	return products, nil
 }
 
-func (repository *productRepositoryPostgres) AdjustStock(sku string, quantity int64) (*model.Product, error) {
+func (repository *productRepositoryPostgres) AdjustStock(ctx context.Context, sku string, quantity int64) (*model.Product, error) {
+	if quantity < 0 {
+		return nil, fmt.Errorf("quantity adjustment cannot be negative: %d", quantity)
+	}
+
 	query := `UPDATE product_t
 			  SET quantity = quantity + $1, updated_at = NOW()
 			  WHERE sku = $2
@@ -97,9 +102,9 @@ func (repository *productRepositoryPostgres) AdjustStock(sku string, quantity in
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, fmt.Errorf("Error: %s\n", err)
+			return nil, fmt.Errorf("product %s not found or insufficient stock: %w", sku, err)
 		}
-		return nil, fmt.Errorf("Error: %s\n", err)
+		return nil, fmt.Errorf("failed to adjust stock: %w", err)
 	}
 
 	return product, nil

@@ -28,7 +28,7 @@ func NewProductHttpHandler(service service.ProductService, cv *utils.CustomValid
 }
 
 func (handler *productHttpHandler) FindAllProducts(w http.ResponseWriter, r *http.Request) {
-	response, err := handler.service.FindAllProducts()
+	response, err := handler.service.FindAllProducts(r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -48,7 +48,7 @@ func (handler *productHttpHandler) CreateProduct(w http.ResponseWriter, r *http.
 		return
 	}
 
-	response, err := handler.service.CreateProduct(&requestBody)
+	response, err := handler.service.CreateProduct(r.Context(), &requestBody)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -59,7 +59,7 @@ func (handler *productHttpHandler) CreateProduct(w http.ResponseWriter, r *http.
 
 func (handler *productHttpHandler) FindProductBySku(w http.ResponseWriter, r *http.Request) {
 	sku := r.PathValue("sku")
-	response, err := handler.service.FindProductBySku(sku)
+	response, err := handler.service.FindProductBySku(r.Context(), sku)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -75,7 +75,7 @@ func (handler *productHttpHandler) AdjustStock(w http.ResponseWriter, r *http.Re
 		return
 	}
 	sku := r.URL.Query().Get("sku")
-	response, err := handler.service.AdjustStock(sku, &requestBody)
+	response, err := handler.service.AdjustStock(r.Context(), sku, &requestBody)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
