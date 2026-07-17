@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"inventory-service/internal/repository/model"
 	"log"
+	"time"
 )
 
 type ProductRepository interface {
@@ -27,11 +28,17 @@ func NewProductRepository(db *sql.DB) ProductRepository {
 }
 
 func (repository *productRepositoryPostgres) CreateProduct(ctx context.Context, product *model.Product) (*model.Product, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	queryCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
 	query := `INSERT INTO product_t (sku, name, quantity, reserved, price, created_at, updated_at) 
               VALUES ($1, $2, $3, $4, $5, $6, $7) 
               RETURNING id`
 
-	err := repository.db.QueryRow(query,
+	err := repository.db.QueryRowContext(queryCtx, query,
 		product.Sku,
 		product.Name,
 		product.Quantity,
@@ -50,8 +57,14 @@ func (repository *productRepositoryPostgres) CreateProduct(ctx context.Context, 
 }
 
 func (repository *productRepositoryPostgres) FindProductBySku(ctx context.Context, sku string) (*model.Product, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	queryCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
 	query := `SELECT id, sku, name, quantity, reserved, price, created_at, updated_at FROM product_t WHERE product_t.sku = $1`
-	product, err := scanProduct(repository.db.QueryRow(query, sku))
+	product, err := scanProduct(repository.db.QueryRowContext(queryCtx, query, sku))
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -64,8 +77,14 @@ func (repository *productRepositoryPostgres) FindProductBySku(ctx context.Contex
 }
 
 func (repository *productRepositoryPostgres) FindAllProducts(ctx context.Context) ([]model.Product, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	queryCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
 	query := "SELECT id, sku, name, quantity, reserved, price, created_at, updated_at FROM product_t"
-	rows, err := repository.db.Query(query)
+	rows, err := repository.db.QueryContext(queryCtx, query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query products: %w", err)
 	}
@@ -88,6 +107,12 @@ func (repository *productRepositoryPostgres) FindAllProducts(ctx context.Context
 }
 
 func (repository *productRepositoryPostgres) AdjustStock(ctx context.Context, sku string, quantity int64) (*model.Product, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	queryCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
 	if quantity < 0 {
 		return nil, fmt.Errorf("quantity adjustment cannot be negative: %d", quantity)
 	}
@@ -98,7 +123,7 @@ func (repository *productRepositoryPostgres) AdjustStock(ctx context.Context, sk
 			  AND quantity + $1 >= 0
 			  RETURNING id, sku, name, quantity, reserved, price, created_at, updated_at`
 
-	product, err := scanProduct(repository.db.QueryRow(query, quantity, sku))
+	product, err := scanProduct(repository.db.QueryRowContext(queryCtx, query, quantity, sku))
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -144,4 +169,13 @@ func scanProducts(rows *sql.Rows) ([]model.Product, error) {
 	}
 
 	return products, rows.Err()
+}
+
+func cancelContext(ctx context.Context) (context.Context, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	queryCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	return queryCtx, nil
 }
