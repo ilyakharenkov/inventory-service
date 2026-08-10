@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: inventory_postgres_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: inventory-db
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - inventory_postgres_data:/var/lib/postgresql/data
+      - ./inventory-backups:/backups
+      - ./inventory-init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - inventory_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d inventory-db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  inventory_postgres_data:
+    name: inventory_postgres_data_volume
+
+networks:
+  inventory_network:
+    name: inventory_network
+    driver: bridge
