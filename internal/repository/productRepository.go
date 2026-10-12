@@ -113,10 +113,6 @@ func (repository *productRepositoryPostgres) AdjustStock(ctx context.Context, sk
 	queryCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	if quantity < 0 {
-		return nil, fmt.Errorf("quantity adjustment cannot be negative: %d", quantity)
-	}
-
 	query := `UPDATE product_t
 			  SET quantity = quantity + $1, updated_at = NOW()
 			  WHERE sku = $2

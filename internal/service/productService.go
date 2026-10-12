@@ -93,8 +93,8 @@ func (service *productCrudService) FindProductBySku(ctx context.Context, sku str
 }
 
 func (service *productCrudService) AdjustStock(ctx context.Context, sku string, stock *dto.Stock) (*dto.Product, error) {
-	switch stock.Action {
-	case "SUBTRACT":
+	switch stock.ActionType {
+	case "subtract":
 		stock.Quantity = -stock.Quantity
 	}
 
