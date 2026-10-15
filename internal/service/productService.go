@@ -38,6 +38,7 @@ func (service *productCrudService) FindAllProducts(ctx context.Context) ([]dto.P
 			Quantity:  v.Quantity,
 			Reserved:  v.Reserved,
 			Price:     v.Price,
+			Available: v.CalculateAvailable(),
 			CreatedAt: v.CreatedAt,
 			UpdatedAt: v.UpdatedAt,
 		}

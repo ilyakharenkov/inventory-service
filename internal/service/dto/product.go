@@ -9,6 +9,7 @@ type Product struct {
 	Name      string `json:"name" validate:"required,min=2,max=100"`
 	Quantity  int64  `json:"quantity" validate:"min=0,max=500"`
 	Reserved  int64  `json:"reserved" validate:"min=0"`
+	Available int64  `json:"available" validate:"min=0"`
 	Price     float64
 	CreatedAt time.Time
 	UpdatedAt time.Time
